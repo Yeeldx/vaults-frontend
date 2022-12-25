@@ -1,8 +1,15 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
+import { ethers } from "ethers";
+
 import Router from "next/router";
+import { useMetaMask } from "../../hooks/useMetaMask";
 import React, { useState, useEffect } from "react";
 import UserPanel from "../../components/Layout/Default/UserPanel";
+import erc20Abi from "../../lib/erc20.abi.json"
+
+import { Vault__factory } from "../../lib/factory";
+
 
 import {
   Button,
@@ -33,6 +40,8 @@ const { TextArea } = Input;
 const { confirm } = Modal;
 const { TabPane } = Tabs;
 
+const tokenAddress = "0x8e0b8c8bb9db49a46697f3a5bb8a308e744821d2";
+const vaultAddress = "0xdeD8B4ac5a4a1D70D633a87A22d9a7A8851bEa1b";
 // import {
 //   LineChart,
 //   Line,
@@ -64,27 +73,78 @@ const Page = ({ session, formFields }) => {
       .catch(function (error) {
         console.error(error);
       });
-  }, [router,id]);
+  }, [router, id]);
 
-  const changeTab = async (key) => {};
+  const changeTab = async (key) => { };
 
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
 
-  const onFinish = (values) => {
+  const onFinish = async (values) => {
     console.log(values);
+    const { state: { wallet }, } = useMetaMask();
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
     //condition check and call required method
     if (isApprovalNeeded) {
-      //call approval method
+      /** Approval Transaction */
+      const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
+
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+
+      const approve = await tokenContract.approve(vaultAddress, values, { gasLimit: 100000 })
+      console.log("approve", approve);
     } else {
-      //call deposit method
+
+      /** Deposit Transaction */
+      const factory = new Vault__factory(signer);
+      const vaultContract = factory.attach(vaultAddress);
+
+      vaultContract.deposit({
+        from: wallet!
+      })
+        .then(async (tx: any) => {
+          console.log('Token deposited')
+          await tx.wait(1);
+          console.log(`Token deposit complete : ${tx}`);
+          router.reload()
+        })
+        .catch((error: any) => {
+          console.log(error);
+          /*setError(true);
+          setErrorMessage(error?.message);
+          setIsMinting(false);*/
+        })
     }
   };
 
   const handleAmountOnchange = async (event) => {
     //add allowance check here
     // if allowance needed call setIsApprovalNeeded(true) else setIsApprovalNeeded(false)
+
+    /** 
+     * TODO see if tokenContract can be made global to avoid code duplication. refer onFinish method.
+     * */
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
+
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    const allowance = await tokenContract.allowance(accounts[0], vaultAddress);
+    const allowanceAmt = ethers.utils.parseUnits(allowance.toString(), "ether");
+    console.log("allowance", allowanceAmt.toString());
+    console.log("input amount", event.target.value);
+
+    if (allowanceAmt >= event.target.value) {
+      setIsApprovalNeeded(false)
+    } else {
+      setIsApprovalNeeded(true)
+    }
   };
 
   return (
@@ -504,7 +564,7 @@ const Page = ({ session, formFields }) => {
     </React.Fragment>
   );
 };
-const Breadcrumb = ({}) => {
+const Breadcrumb = ({ }) => {
   const router = useRouter();
   const { id } = router.query;
   const [rfqData, setRfqData] = useState({});
@@ -538,7 +598,7 @@ const Breadcrumb = ({}) => {
   );
 };
 
-const panel = ({}) => {
+const panel = ({ }) => {
   return <UserPanel Breadcrumb={Breadcrumb}></UserPanel>;
 };
 Page.Breadcrumb = panel;
