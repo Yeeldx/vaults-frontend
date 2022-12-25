@@ -62,6 +62,7 @@ const Page = ({ session, formFields }) => {
   const [data, setData] = useState();
   const [form] = Form.useForm();
   const [isApprovalNeeded, setIsApprovalNeeded] = useState(false);
+  const { state: { wallet }, } = useMetaMask();
 
   useEffect(() => {
     api
@@ -83,7 +84,6 @@ const Page = ({ session, formFields }) => {
 
   const onFinish = async (values) => {
     console.log(values);
-    const { state: { wallet }, } = useMetaMask();
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
     //condition check and call required method
