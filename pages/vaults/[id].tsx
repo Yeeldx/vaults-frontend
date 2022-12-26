@@ -6,10 +6,10 @@ import Router from "next/router";
 import { useMetaMask } from "../../hooks/useMetaMask";
 import React, { useState, useEffect } from "react";
 import UserPanel from "../../components/Layout/Default/UserPanel";
-import erc20Abi from "../../lib/erc20.abi.json"
+import erc20Abi from "../../lib/erc20.abi.json";
+import VaultAbi from "../../lib/vault.abi.json";
 
 import { Vault__factory } from "../../lib/factory";
-
 
 import {
   Button,
@@ -55,77 +55,116 @@ const vaultAddress = "0xdeD8B4ac5a4a1D70D633a87A22d9a7A8851bEa1b";
 // } from "recharts";
 
 const Page = ({ session, formFields }) => {
-
   const router = useRouter();
   const { locale: activeLocale } = router;
   const { id } = router.query;
   const [data, setData] = useState();
   const [form] = Form.useForm();
   const [isApprovalNeeded, setIsApprovalNeeded] = useState(false);
-  const { state: { wallet }, } = useMetaMask();
+  const [loading, setLoading] = useState(false);
+
+  const {
+    state: { wallet },
+  } = useMetaMask();
+
+  const [provider, setProvider] = useState({});
+  const [account, setAccount] = useState("");
 
   useEffect(() => {
+    setProvider(new ethers.providers.Web3Provider(window.ethereum));
+
     api
       .get("/api/vaults/" + id)
-      .then(({ data: result }) => {
+      .then(async ({ data: result }) => {
         setData(result.data);
-        console.log(result.data);
+
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+
+        console.log("acc", accounts);
+
+        setAccount(accounts[0]);
+
+        form.setFieldsValue({
+          from: accounts[0],
+          to: tokenAddress,
+        });
       })
       .catch(function (error) {
         console.error(error);
       });
   }, [router, id]);
 
-  const changeTab = async (key) => { };
+  const changeTab = async (key) => {};
 
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
 
   const onFinish = async (values) => {
-    console.log(values);
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
+    setLoading(true);
+
+    let data = {
+      _value: ethers.utils.parseUnits(values.amount, "ether"),
+      _spender: values.from,
+    };
+
+    values._value = ethers.utils.parseUnits(values.amount, "ether").toString();
+    values._spender = values.from;
+
+    const signer = provider?.getSigner();
+
     //condition check and call required method
     if (isApprovalNeeded) {
-      /** Approval Transaction */
+      //   /** Approval Transaction */
       const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
 
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
 
-      const approve = await tokenContract.approve(vaultAddress, values, { gasLimit: 100000 })
+      const approve = await tokenContract.approve(
+        vaultAddress,
+        ethers.utils.parseUnits(values.amount, "ether"),
+        {
+          gasLimit: 1000000,
+        }
+      );
       console.log("approve", approve);
+      setIsApprovalNeeded(false);
+      setLoading(false);
     } else {
-
       /** Deposit Transaction */
-      const factory = new Vault__factory(signer);
-      const vaultContract = factory.attach(vaultAddress);
-
-      vaultContract.deposit({
-        from: wallet!
-      })
+      const vaultContract = new ethers.Contract(vaultAddress, VaultAbi, signer);
+      console.log(vaultContract);
+      vaultContract
+        .deposit({
+          gasLimit: 1000000,
+        })
         .then(async (tx: any) => {
-          console.log('Token deposited')
+          console.log("Token deposited");
+          setLoading(false);
+
           await tx.wait(1);
           console.log(`Token deposit complete : ${tx}`);
-          router.reload()
+          router.reload();
         })
         .catch((error: any) => {
           console.log(error);
           /*setError(true);
           setErrorMessage(error?.message);
           setIsMinting(false);*/
-        })
+        });
     }
   };
 
   const handleAmountOnchange = async (event) => {
+    setLoading(true);
     //add allowance check here
     // if allowance needed call setIsApprovalNeeded(true) else setIsApprovalNeeded(false)
 
-    /** 
+    /**
      * TODO see if tokenContract can be made global to avoid code duplication. refer onFinish method.
      * */
     const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -135,16 +174,20 @@ const Page = ({ session, formFields }) => {
     const accounts = await window.ethereum.request({
       method: "eth_requestAccounts",
     });
+
+    console.log("account", accounts[0]);
+
     const allowance = await tokenContract.allowance(accounts[0], vaultAddress);
     const allowanceAmt = ethers.utils.parseUnits(allowance.toString(), "ether");
     console.log("allowance", allowanceAmt.toString());
     console.log("input amount", event.target.value);
 
     if (allowanceAmt >= event.target.value) {
-      setIsApprovalNeeded(false)
+      setIsApprovalNeeded(false);
     } else {
-      setIsApprovalNeeded(true)
+      setIsApprovalNeeded(true);
     }
+    setLoading(false);
   };
 
   return (
@@ -298,7 +341,7 @@ const Page = ({ session, formFields }) => {
                 }
               >
                 <div className="row">
-                  <div className="col-xl-2 col-lg-2 col-md-2">
+                  <div className="col-xl-3 col-lg-3 col-md-3">
                     <Form.Item hidden name="rfq">
                       <Input type="hidden" />
                     </Form.Item>
@@ -310,7 +353,7 @@ const Page = ({ session, formFields }) => {
                       <Input placeholder="SL-0001" />
                     </Form.Item>
                   </div>
-                  <div className="col-xl-2 col-lg-2 col-md-2">
+                  <div className="col-xl-3 col-lg-3 col-md-3">
                     <Form.Item
                       label={"Amount"}
                       rules={[{ required: true, message: "" }]}
@@ -319,7 +362,7 @@ const Page = ({ session, formFields }) => {
                       <Input placeholder="10" onChange={handleAmountOnchange} />
                     </Form.Item>
                   </div>
-                  <div className="col-xl-2 col-lg-2 col-md-2">
+                  <div className="col-xl-3 col-lg-3 col-md-3">
                     <Form.Item
                       label={"To Vault"}
                       rules={[{ required: true, message: "" }]}
@@ -328,7 +371,7 @@ const Page = ({ session, formFields }) => {
                       <Input placeholder={"SL-0001"} />
                     </Form.Item>
                   </div>
-                  <div className="col-xl-2 col-lg-2 col-md-2">
+                  {/* <div className="col-xl-3 col-lg-3 col-md-3">
                     <Form.Item
                       label={"You Will Recieve"}
                       rules={[{ required: true, message: "" }]}
@@ -336,9 +379,9 @@ const Page = ({ session, formFields }) => {
                     >
                       <Input placeholder="10" />
                     </Form.Item>
-                  </div>
+                  </div> */}
 
-                  <div className="col-xl-2 col-lg-2 col-md-2">
+                  <div className="col-xl-3 col-lg-3 col-md-3">
                     <Form.Item label={" "} name="recieve">
                       {isApprovalNeeded ? (
                         <Button
@@ -348,6 +391,7 @@ const Page = ({ session, formFields }) => {
                           htmlType="submit"
                           type="primary"
                           value={""}
+                          loading={loading}
                         >
                           {"Approve"}
                         </Button>
@@ -359,6 +403,7 @@ const Page = ({ session, formFields }) => {
                           htmlType="submit"
                           type="primary"
                           value={""}
+                          loading={loading}
                         >
                           {"Deposit"}
                         </Button>
@@ -564,7 +609,7 @@ const Page = ({ session, formFields }) => {
     </React.Fragment>
   );
 };
-const Breadcrumb = ({ }) => {
+const Breadcrumb = ({}) => {
   const router = useRouter();
   const { id } = router.query;
   const [rfqData, setRfqData] = useState({});
@@ -598,7 +643,7 @@ const Breadcrumb = ({ }) => {
   );
 };
 
-const panel = ({ }) => {
+const panel = ({}) => {
   return <UserPanel Breadcrumb={Breadcrumb}></UserPanel>;
 };
 Page.Breadcrumb = panel;
@@ -606,7 +651,7 @@ export default Page;
 
 export async function getServerSideProps(context) {
   const { req, res, params, locale } = context;
-  const session = {}
+  const session = {};
   let rfq = {};
   let formFields = {};
   try {
