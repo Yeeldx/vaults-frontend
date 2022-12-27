@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ethers } from "ethers";
 import { useListen } from "../../../hooks/useListen";
 import { useMetaMask } from "../../../hooks/useMetaMask";
+import YeeldxIcon from '../../../assets/yeeldxIcon.svg';
+import YeeldxLogo from '../../../assets/yeeldxLogo.svg';
 
 import {
   NavigationView,
@@ -11,6 +13,7 @@ import {
 } from "../../styledComponents/navigation";
 import { SiEthereum } from "react-icons/si";
 import { Button } from "antd";
+
 
 export default function Header() {
   const {
@@ -64,18 +67,26 @@ export default function Header() {
   return (
     <header className="connex-header mobile-none">
       <nav className="connex-nav">
+        <Link href="/">
+          <img
+            src="https://avatars.githubusercontent.com/u/111516461?s=200&v=4"
+            alt='YeeldxLogo'
+            height={60}
+          />
+          <span style={{fontWeight: 500, color: "#ffffff"}}>Yeeldx</span>
+        </Link>
         <ul className="menu-list"></ul>
-        <div className="connec_nav_suportLg">
+        <div className="connec_nav_suportLg" >
           {showConnectButton && (
             <li textSize={10} onClick={handleConnect}>
-              <Button className="disconnect">
+              <Button className="disconnect" style={{ marginRight: 15}}>
                 {status === "loading" ? "loading..." : "Connect Wallet"}
               </Button>
             </li>
           )}
 
           {showInstallMetaMask && (
-            <Link href="https://metamask.io/" target="_blank">
+            <Link href="https://metamask.io/" target="_blank" style={{ marginRight: 15}}>
               Install MetaMask
             </Link>
           )}
@@ -87,12 +98,13 @@ export default function Header() {
                   className="disconnect"
                   textSize={10}
                   onClick={handleDisconnect}
+                  style={{ marginRight: 15}}
                 >
                   Disconnect
                 </Button>
               )}
               <span className="support">
-                <Link href={`https://etherscan.io/address/${wallet}`}>
+                <Link href={`https://etherscan.io/address/${wallet}`} >
                   {formatAddress(wallet)}
                 </Link>
               </span>

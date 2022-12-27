@@ -229,13 +229,13 @@ const SideBar = ({ }) => {
   return (
     <aside className="connex-side-menu left-wrapper mobile-none  d-sm-none d-lg-block">
       <div className="logo-wrapper mobile-none">
-        <Link href={"/"} legacyBehavior>
+        {/* <Link href={"/"} legacyBehavior>
           <div className="brand">
             <a>
               VAULT
             </a>
           </div>
-        </Link>
+        </Link> */}
 
       </div>
       <div className="menu-flex-wrapper">
@@ -245,7 +245,7 @@ const SideBar = ({ }) => {
               <MenuItem
                 index="/"
                 menuClassName="my-dashboard"
-                title={"Dashboard"}
+                title={"Vaults"}
                 subtitle=""
                 href="/"
               ></MenuItem>
