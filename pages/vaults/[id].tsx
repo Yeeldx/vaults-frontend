@@ -40,8 +40,6 @@ const { TextArea } = Input;
 const { confirm } = Modal;
 const { TabPane } = Tabs;
 
-const tokenAddress = "0x8e0b8c8bb9db49a46697f3a5bb8a308e744821d2";
-const vaultAddress = "0xdeD8B4ac5a4a1D70D633a87A22d9a7A8851bEa1b";
 // import {
 //   LineChart,
 //   Line,
@@ -76,6 +74,7 @@ const Page = ({ session, formFields }) => {
     api
       .get("/api/vaults/" + id)
       .then(async ({ data: result }) => {
+        console.log("result.data", result.data);
         setData(result.data);
 
         const accounts = await window.ethereum.request({
@@ -88,7 +87,7 @@ const Page = ({ session, formFields }) => {
 
         form.setFieldsValue({
           from: accounts[0],
-          to: tokenAddress,
+          to: result.data.address,
         });
       })
       .catch(function (error) {
@@ -105,11 +104,7 @@ const Page = ({ session, formFields }) => {
   const onFinish = async (values) => {
     setLoading(true);
 
-    let data = {
-      _value: ethers.utils.parseUnits(values.amount, "ether"),
-      _spender: values.from,
-    };
-
+    
     values._value = ethers.utils.parseUnits(values.amount, "ether").toString();
     values._spender = values.from;
 
@@ -118,10 +113,10 @@ const Page = ({ session, formFields }) => {
     //condition check and call required method
     if (isApprovalNeeded) {
       //   /** Approval Transaction */
-      const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
+      const tokenContract = new ethers.Contract(data?.token.address, erc20Abi, signer);
 
       const approve = await tokenContract.approve(
-        vaultAddress,
+        data?.address,
         ethers.utils.parseUnits(values.amount),
         {
           gasLimit: 1000000,
@@ -132,7 +127,7 @@ const Page = ({ session, formFields }) => {
       setLoading(false);
     } else {
       /** Deposit Transaction */
-      const vaultContract = new ethers.Contract(vaultAddress, vaultAbi, signer);
+      const vaultContract = new ethers.Contract(data?.address, vaultAbi, signer);
       console.log(vaultContract);
       vaultContract
         .deposit(
@@ -167,7 +162,7 @@ const Page = ({ session, formFields }) => {
      * */
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
-    const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
+    const tokenContract = new ethers.Contract(data?.token.address, erc20Abi, signer);
 
     const accounts = await window.ethereum.request({
       method: "eth_requestAccounts",
@@ -176,7 +171,7 @@ const Page = ({ session, formFields }) => {
     console.log("account", accounts[0]);
     console.log("input amount", event.target.value);
 
-    const allowance = await tokenContract.allowance(accounts[0], vaultAddress);
+    const allowance = await tokenContract.allowance(accounts[0], data?.address);
     console.log("allowance", allowance.toString());
 
     const inputtedAmount = ethers.utils.parseUnits(event.target.value);
