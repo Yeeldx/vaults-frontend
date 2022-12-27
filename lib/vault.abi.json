@@ -14,7 +14,7 @@
     "stateMutability": "nonpayable",
     "type": "function",
     "name": "deposit",
-    "inputs": [],
+    "inputs": [{"name": "_amount","type": "uint256"}],
     "outputs": [{ "name": "", "type": "uint256" }]
   },
   {
@@ -39,4 +39,5 @@
     "inputs": [],
     "outputs": [{ "name": "", "type": "address" }],
     "gas": 3798
-  }]
+  }
+]

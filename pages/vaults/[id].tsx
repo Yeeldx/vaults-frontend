@@ -7,7 +7,7 @@ import { useMetaMask } from "../../hooks/useMetaMask";
 import React, { useState, useEffect } from "react";
 import UserPanel from "../../components/Layout/Default/UserPanel";
 import erc20Abi from "../../lib/erc20.abi.json";
-import VaultAbi from "../../lib/vault.abi.json";
+import vaultAbi from "../../lib/vault.abi.json";
 
 import { Vault__factory } from "../../lib/factory";
 
@@ -96,7 +96,7 @@ const Page = ({ session, formFields }) => {
       });
   }, [router, id]);
 
-  const changeTab = async (key) => {};
+  const changeTab = async (key) => { };
 
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
@@ -120,13 +120,9 @@ const Page = ({ session, formFields }) => {
       //   /** Approval Transaction */
       const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
 
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-
       const approve = await tokenContract.approve(
         vaultAddress,
-        ethers.utils.parseUnits(values.amount, "ether"),
+        ethers.utils.parseUnits(values.amount),
         {
           gasLimit: 1000000,
         }
@@ -136,12 +132,14 @@ const Page = ({ session, formFields }) => {
       setLoading(false);
     } else {
       /** Deposit Transaction */
-      const vaultContract = new ethers.Contract(vaultAddress, VaultAbi, signer);
+      const vaultContract = new ethers.Contract(vaultAddress, vaultAbi, signer);
       console.log(vaultContract);
       vaultContract
-        .deposit({
-          gasLimit: 1000000,
-        })
+        .deposit(
+          ethers.utils.parseUnits(values.amount),
+          {
+            gasLimit: 1000000,
+          })
         .then(async (tx: any) => {
           console.log("Token deposited");
           setLoading(false);
@@ -176,13 +174,16 @@ const Page = ({ session, formFields }) => {
     });
 
     console.log("account", accounts[0]);
-
-    const allowance = await tokenContract.allowance(accounts[0], vaultAddress);
-    const allowanceAmt = ethers.utils.parseUnits(allowance.toString(), "ether");
-    console.log("allowance", allowanceAmt.toString());
     console.log("input amount", event.target.value);
 
-    if (allowanceAmt >= event.target.value) {
+    const allowance = await tokenContract.allowance(accounts[0], vaultAddress);
+    console.log("allowance", allowance.toString());
+
+    const inputtedAmount = ethers.utils.parseUnits(event.target.value);
+    console.log("inputtedAmount", inputtedAmount);
+    console.log("inputtedAmount.toString()", inputtedAmount.toString());
+
+    if (allowance >= inputtedAmount) {
       setIsApprovalNeeded(false);
     } else {
       setIsApprovalNeeded(true);
@@ -609,7 +610,7 @@ const Page = ({ session, formFields }) => {
     </React.Fragment>
   );
 };
-const Breadcrumb = ({}) => {
+const Breadcrumb = ({ }) => {
   const router = useRouter();
   const { id } = router.query;
   const [rfqData, setRfqData] = useState({});
@@ -643,7 +644,7 @@ const Breadcrumb = ({}) => {
   );
 };
 
-const panel = ({}) => {
+const panel = ({ }) => {
   return <UserPanel Breadcrumb={Breadcrumb}></UserPanel>;
 };
 Page.Breadcrumb = panel;
