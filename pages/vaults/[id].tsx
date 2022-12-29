@@ -2,14 +2,12 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { ethers } from "ethers";
 
-import Router from "next/router";
 import { useMetaMask } from "../../hooks/useMetaMask";
 import React, { useState, useEffect } from "react";
 import UserPanel from "../../components/Layout/Default/UserPanel";
 import erc20Abi from "../../lib/erc20.abi.json";
 import vaultAbi from "../../lib/vault.abi.json";
-
-import { Vault__factory } from "../../lib/factory";
+import rightArrow from "../../assets/arrow-right.svg"
 
 import {
   Button,
@@ -186,12 +184,12 @@ const Page = ({ session, formFields }) => {
         console.log(`Token withdraw complete : ${tx}`);
         router.reload();
       })
-      .catch((error: any) => {
-        console.log(error);
-        /*setError(true);
-        setErrorMessage(error?.message);
-        setIsMinting(false);*/
-      });
+        .catch((error: any) => {
+          console.log(error);
+          /*setError(true);
+          setErrorMessage(error?.message);
+          setIsMinting(false);*/
+        });
     }
   };
 
@@ -403,14 +401,15 @@ const Page = ({ session, formFields }) => {
                     </div>
                     <div className="col-sm-1">
                       <Form.Item
+                        style={{ maxHeight: "50px" }}
                         label={" "}
                       >
                         <Button
                           style={{ background: "#008CBA", maxWidth: "50px", textAlign: "center" }}
                           onClick={toggleMode}
                         >
-                          <svg>
-                            <path d="M24.7071 8.70711C25.0976 8.31658 25.0976 7.68342 24.7071 7.29289L18.3431 0.928932C17.9526 0.538408 17.3195 0.538408 16.9289 0.928932C16.5384 1.31946 16.5384 1.95262 16.9289 2.34315L22.5858 8L16.9289 13.6569C16.5384 14.0474 16.5384 14.6805 16.9289 15.0711C17.3195 15.4616 17.9526 15.4616 18.3431 15.0711L24.7071 8.70711ZM0 9H24V7H0V9Z" fill="#FFFFFF"></path>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#FFFFFF" className="bi bi-arrow-right" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z" />
                           </svg>
                         </Button>
                       </Form.Item>
