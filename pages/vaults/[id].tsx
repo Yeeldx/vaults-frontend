@@ -60,6 +60,7 @@ const Page = ({ session, formFields }) => {
   const [form] = Form.useForm();
   const [isApprovalNeeded, setIsApprovalNeeded] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isDepositing, setIsDepositing] = useState(true);
 
   const {
     state: { wallet },
@@ -97,6 +98,26 @@ const Page = ({ session, formFields }) => {
 
   const changeTab = async (key) => { };
 
+  const toggleMode = async () => {
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    if (isDepositing) {
+      setIsDepositing(false)
+      form.setFieldsValue({
+        from: data?.address,
+        to: accounts[0],
+      });
+    } else {
+      setIsDepositing(true)
+      form.setFieldsValue({
+        from: accounts[0],
+        to: data?.address,
+      });
+    }
+
+  }
+
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
@@ -104,51 +125,73 @@ const Page = ({ session, formFields }) => {
   const onFinish = async (values) => {
     setLoading(true);
 
-    
+
     values._value = ethers.utils.parseUnits(values.amount, "ether").toString();
     values._spender = values.from;
 
     const signer = provider?.getSigner();
 
-    //condition check and call required method
-    if (isApprovalNeeded) {
-      //   /** Approval Transaction */
-      const tokenContract = new ethers.Contract(data?.token.address, erc20Abi, signer);
+    const tokenContract = new ethers.Contract(data?.token.address, erc20Abi, signer);
+    const vaultContract = new ethers.Contract(data?.address, vaultAbi, signer);
 
-      const approve = await tokenContract.approve(
-        data?.address,
+    //condition check and call required method
+    if (isDepositing) {
+      if (isApprovalNeeded) {
+        //   /** Approval Transaction */  
+        const approve = await tokenContract.approve(
+          data?.address,
+          ethers.utils.parseUnits(values.amount),
+          {
+            gasLimit: 1000000,
+          }
+        );
+        console.log("approve", approve);
+        setIsApprovalNeeded(false);
+        setLoading(false);
+      } else {
+        /** Deposit Transaction */
+        console.log(vaultContract);
+        vaultContract
+          .deposit(
+            ethers.utils.parseUnits(values.amount),
+            {
+              gasLimit: 1000000,
+            })
+          .then(async (tx: any) => {
+            console.log("Token depositing");
+            setLoading(false);
+
+            await tx.wait(1);
+            console.log(`Token deposit complete : ${tx}`);
+            router.reload();
+          })
+          .catch((error: any) => {
+            console.log(error);
+            /*setError(true);
+            setErrorMessage(error?.message);
+            setIsMinting(false);*/
+          });
+      }
+    } else {
+      vaultContract.withdraw(
         ethers.utils.parseUnits(values.amount),
         {
           gasLimit: 1000000,
         }
-      );
-      console.log("approve", approve);
-      setIsApprovalNeeded(false);
-      setLoading(false);
-    } else {
-      /** Deposit Transaction */
-      const vaultContract = new ethers.Contract(data?.address, vaultAbi, signer);
-      console.log(vaultContract);
-      vaultContract
-        .deposit(
-          ethers.utils.parseUnits(values.amount),
-          {
-            gasLimit: 1000000,
-          })
-        .then(async (tx: any) => {
-          console.log("Token deposited");
-          setLoading(false);
+      ).then(async (tx: any) => {
+        console.log("Token withdrawing");
+        setLoading(false);
 
-          await tx.wait(1);
-          console.log(`Token deposit complete : ${tx}`);
-          router.reload();
-        })
-        .catch((error: any) => {
-          console.log(error);
-          /*setError(true);
-          setErrorMessage(error?.message);
-          setIsMinting(false);*/
-        });
+        await tx.wait(1);
+        console.log(`Token withdraw complete : ${tx}`);
+        router.reload();
+      })
+      .catch((error: any) => {
+        console.log(error);
+        /*setError(true);
+        setErrorMessage(error?.message);
+        setIsMinting(false);*/
+      });
     }
   };
 
@@ -334,40 +377,55 @@ const Page = ({ session, formFields }) => {
                     //   </Button>
                     // </div>,
                   ]
-                }
-              >
-                <div className="row">
-                  <div className="col-xl-3 col-lg-3 col-md-3">
-                    <Form.Item hidden name="rfq">
-                      <Input type="hidden" />
-                    </Form.Item>
-                    <Form.Item
-                      label={"From Wallet"}
-                      rules={[{ required: true, message: "" }]}
-                      name="from"
-                    >
-                      <Input placeholder="SL-0001" />
-                    </Form.Item>
-                  </div>
-                  <div className="col-xl-3 col-lg-3 col-md-3">
-                    <Form.Item
-                      label={"Amount"}
-                      rules={[{ required: true, message: "" }]}
-                      name="amount"
-                    >
-                      <Input placeholder="10" onChange={handleAmountOnchange} />
-                    </Form.Item>
-                  </div>
-                  <div className="col-xl-3 col-lg-3 col-md-3">
-                    <Form.Item
-                      label={"To Vault"}
-                      rules={[{ required: true, message: "" }]}
-                      name="to"
-                    >
-                      <Input placeholder={"SL-0001"} />
-                    </Form.Item>
-                  </div>
-                  {/* <div className="col-xl-3 col-lg-3 col-md-3">
+                }>
+                <div className="container">
+                  <div className="row">
+                    <div className="col-sm-6" style={{ maxWidth: 200 }}>
+                      <Form.Item hidden name="rfq">
+                        <Input type="hidden" />
+                      </Form.Item>
+                      <Form.Item
+                        label={"From"}
+                        rules={[{ required: true, message: "" }]}
+                        name="from"
+                      >
+                        <Input placeholder="SL-0001" />
+                      </Form.Item>
+                    </div>
+                    <div className="col-sm-6" style={{ maxWidth: 200 }}>
+                      <Form.Item
+                        label={"Amount"}
+                        rules={[{ required: true, message: "" }]}
+                        name="amount"
+                      >
+                        <Input placeholder="10" onChange={handleAmountOnchange} />
+                      </Form.Item>
+                    </div>
+                    <div className="col-sm-1">
+                      <Form.Item
+                        label={" "}
+                      >
+                        <Button
+                          style={{ background: "#008CBA", maxWidth: "50px", textAlign: "center" }}
+                          onClick={toggleMode}
+                        >
+                          <svg>
+                            <path d="M24.7071 8.70711C25.0976 8.31658 25.0976 7.68342 24.7071 7.29289L18.3431 0.928932C17.9526 0.538408 17.3195 0.538408 16.9289 0.928932C16.5384 1.31946 16.5384 1.95262 16.9289 2.34315L22.5858 8L16.9289 13.6569C16.5384 14.0474 16.5384 14.6805 16.9289 15.0711C17.3195 15.4616 17.9526 15.4616 18.3431 15.0711L24.7071 8.70711ZM0 9H24V7H0V9Z" fill="#FFFFFF"></path>
+                          </svg>
+                        </Button>
+                      </Form.Item>
+
+                    </div>
+                    <div className="col-sm-6" style={{ maxWidth: 200 }}>
+                      <Form.Item
+                        label={"To"}
+                        rules={[{ required: true, message: "" }]}
+                        name="to"
+                      >
+                        <Input placeholder={"SL-0001"} />
+                      </Form.Item>
+                    </div>
+                    {/* <div className="col-sm-6">
                     <Form.Item
                       label={"You Will Recieve"}
                       rules={[{ required: true, message: "" }]}
@@ -376,37 +434,57 @@ const Page = ({ session, formFields }) => {
                       <Input placeholder="10" />
                     </Form.Item>
                   </div> */}
+                    <div className="col-sm-1" style={{ maxWidth: 200 }}>
+                      {isDepositing ? (<div>
+                        <Form.Item label={" "} name="recieve">
+                          {isApprovalNeeded ? (
+                            <Button
+                              style={{ maxHeight: 50 }}
+                              className="custom-btn"
+                              key="submit"
+                              htmlType="submit"
+                              type="primary"
+                              value={""}
+                              loading={loading}
+                            >
+                              {"Approve"}
+                            </Button>
+                          ) : (
+                            <Button
+                              style={{}}
+                              className="custom-btn"
+                              key="submit"
+                              htmlType="submit"
+                              type="primary"
+                              value={""}
+                              loading={loading}
+                            >
+                              {"Deposit"}
+                            </Button>
+                          )}
+                        </Form.Item>
+                      </div>) : (<div>
+                        <Form.Item
+                          label={" "}
+                        >
+                          <Button
+                            style={{}}
+                            className="custom-btn"
+                            key="submit"
+                            htmlType="submit"
+                            type="primary"
+                            value={""}
+                            loading={loading}
+                          >
+                            Withdraw
+                          </Button>
+                        </Form.Item>
 
-                  <div className="col-xl-3 col-lg-3 col-md-3">
-                    <Form.Item label={" "} name="recieve">
-                      {isApprovalNeeded ? (
-                        <Button
-                          style={{}}
-                          className="form-save"
-                          key="submit"
-                          htmlType="submit"
-                          type="primary"
-                          value={""}
-                          loading={loading}
-                        >
-                          {"Approve"}
-                        </Button>
-                      ) : (
-                        <Button
-                          style={{}}
-                          className="form-save"
-                          key="submit"
-                          htmlType="submit"
-                          type="primary"
-                          value={""}
-                          loading={loading}
-                        >
-                          {"Deposit"}
-                        </Button>
-                      )}
-                    </Form.Item>
+                      </div>)}
+                    </div>
                   </div>
                 </div>
+
               </Card>
             </Form>
           </div>
