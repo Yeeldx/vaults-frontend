@@ -255,7 +255,7 @@ body {
 }
 
 header + .main-container {
-  margin-top: 30px;
+  margin-top: 70px;
 }
 
 .main-container {
@@ -354,6 +354,8 @@ header + .main-container {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
+  margin-top:auto;
+  align-items: center;
 }
 .connex-header .connex-nav .connec_nav_suportLg{
   display: flex;
@@ -567,12 +569,12 @@ header + .main-container {
   }
 }
 header {
-  padding: 0 57px;
+  padding: 0 135px;
   background: #092445;
   position: fixed;
   top: 0;
   width: 100%;
-  height: 40px;
+  height: 70px;
   z-index: 99;
 }
 header .connex-nav {
@@ -616,12 +618,12 @@ header .menu-list li a {
 
 @media (min-width: 1200px) and (max-width: 1360px) {
   header {
-    padding: 0 30px;
+    padding: 0 130px;
   }
 }
 @media (min-width: 992px) and (max-width: 1199.5px) {
   header {
-    padding: 0 30px;
+    padding: 0 135px;
   }
 }
 @media only screen and (max-width: 991px) {
@@ -930,8 +932,8 @@ header .menu-list li a {
   height: 16px;
 }
 .connex-main-content {
-  width: calc(100% - 371px);
-  padding: 30px 135px 64px 0;
+  width: calc(100%);
+  padding: 30px 135px 64px 135px;
   position: relative;
   margin-bottom: 25px;
 }

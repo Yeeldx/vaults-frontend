@@ -75,7 +75,9 @@ export default function Header() {
           />
           <span style={{fontWeight: 500, color: "#ffffff"}}>Yeeldx</span>
         </Link>
-        <ul className="menu-list"></ul>
+        <ul className="menu-list">
+          <li>Vaults</li>
+        </ul>
         <div className="connec_nav_suportLg" >
           {showConnectButton && (
             <li textSize={10} onClick={handleConnect}>

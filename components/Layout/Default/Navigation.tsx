@@ -6,7 +6,7 @@ import SideBar from './Sidebar';
 const Navigation = ({ }) => {
     return (
         <React.Fragment>
-            <SideBar></SideBar>
+            {/* <SideBar></SideBar> */}
             {/* <MobileMenu></MobileMenu> */}
         </React.Fragment>
     );

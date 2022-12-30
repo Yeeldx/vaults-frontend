@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import Image from 'next/image';
+
+import YeeldxLogo from '../../../public/assets/yeeldxLogo.svg';
 
 const Menu = ({ children }) => {
   const router = useRouter();
@@ -229,13 +232,11 @@ const SideBar = ({ }) => {
   return (
     <aside className="connex-side-menu left-wrapper mobile-none  d-sm-none d-lg-block">
       <div className="logo-wrapper mobile-none">
-        {/* <Link href={"/"} legacyBehavior>
+        <Link href={"/"} legacyBehavior>
           <div className="brand">
-            <a>
-              VAULT
-            </a>
+            <Image src={YeeldxLogo} height={50}></Image>
           </div>
-        </Link> */}
+        </Link>
 
       </div>
       <div className="menu-flex-wrapper">

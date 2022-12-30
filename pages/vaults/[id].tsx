@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import UserPanel from "../../components/Layout/Default/UserPanel";
 import erc20Abi from "../../lib/erc20.abi.json";
 import vaultAbi from "../../lib/vault.abi.json";
-import rightArrow from "../../assets/arrow-right.svg"
+import rightArrow from "../../assets/arrow-right.svg";
 
 import {
   Button,
@@ -84,6 +84,8 @@ const Page = ({ session, formFields }) => {
 
         setAccount(accounts[0]);
 
+        getTokenSummary();
+
         form.setFieldsValue({
           from: accounts[0],
           to: result.data.address,
@@ -94,27 +96,47 @@ const Page = ({ session, formFields }) => {
       });
   }, [router, id]);
 
-  const changeTab = async (key) => { };
+  const [deposited, setDeposited] = useState(0);
+  const [balance, setBalance] = useState(0);
+
+  const getTokenSummary = async () => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const vaultContract = new ethers.Contract(data?.address, vaultAbi, signer);
+
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+
+    const totalDeposited = await vaultContract.totalAssets();
+    console.log("tt depo", totalDeposited.toString());
+    setDeposited(totalDeposited)
+
+    const totalBalance = await vaultContract.balanceOf(accounts[0]);
+    console.log("tt balance", totalBalance.toString());
+    setBalance(totalBalance);
+  };
+
+  const changeTab = async (key) => {};
 
   const toggleMode = async () => {
     const accounts = await window.ethereum.request({
       method: "eth_requestAccounts",
     });
     if (isDepositing) {
-      setIsDepositing(false)
+      setIsDepositing(false);
       form.setFieldsValue({
         from: data?.address,
         to: accounts[0],
       });
     } else {
-      setIsDepositing(true)
+      setIsDepositing(true);
       form.setFieldsValue({
         from: accounts[0],
         to: data?.address,
       });
     }
-
-  }
+  };
 
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
@@ -123,19 +145,22 @@ const Page = ({ session, formFields }) => {
   const onFinish = async (values) => {
     setLoading(true);
 
-
     values._value = ethers.utils.parseUnits(values.amount, "ether").toString();
     values._spender = values.from;
 
     const signer = provider?.getSigner();
 
-    const tokenContract = new ethers.Contract(data?.token.address, erc20Abi, signer);
+    const tokenContract = new ethers.Contract(
+      data?.token.address,
+      erc20Abi,
+      signer
+    );
     const vaultContract = new ethers.Contract(data?.address, vaultAbi, signer);
 
     //condition check and call required method
     if (isDepositing) {
       if (isApprovalNeeded) {
-        //   /** Approval Transaction */  
+        //   /** Approval Transaction */
         const approve = await tokenContract.approve(
           data?.address,
           ethers.utils.parseUnits(values.amount),
@@ -150,11 +175,9 @@ const Page = ({ session, formFields }) => {
         /** Deposit Transaction */
         console.log(vaultContract);
         vaultContract
-          .deposit(
-            ethers.utils.parseUnits(values.amount),
-            {
-              gasLimit: 1000000,
-            })
+          .deposit(ethers.utils.parseUnits(values.amount), {
+            gasLimit: 1000000,
+          })
           .then(async (tx: any) => {
             console.log("Token depositing");
             setLoading(false);
@@ -171,19 +194,18 @@ const Page = ({ session, formFields }) => {
           });
       }
     } else {
-      vaultContract.withdraw(
-        ethers.utils.parseUnits(values.amount),
-        {
+      vaultContract
+        .withdraw(ethers.utils.parseUnits(values.amount), {
           gasLimit: 1000000,
-        }
-      ).then(async (tx: any) => {
-        console.log("Token withdrawing");
-        setLoading(false);
+        })
+        .then(async (tx: any) => {
+          console.log("Token withdrawing");
+          setLoading(false);
 
-        await tx.wait(1);
-        console.log(`Token withdraw complete : ${tx}`);
-        router.reload();
-      })
+          await tx.wait(1);
+          console.log(`Token withdraw complete : ${tx}`);
+          router.reload();
+        })
         .catch((error: any) => {
           console.log(error);
           /*setError(true);
@@ -203,7 +225,11 @@ const Page = ({ session, formFields }) => {
      * */
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
-    const tokenContract = new ethers.Contract(data?.token.address, erc20Abi, signer);
+    const tokenContract = new ethers.Contract(
+      data?.token.address,
+      erc20Abi,
+      signer
+    );
 
     const accounts = await window.ethereum.request({
       method: "eth_requestAccounts",
@@ -375,7 +401,8 @@ const Page = ({ session, formFields }) => {
                     //   </Button>
                     // </div>,
                   ]
-                }>
+                }
+              >
                 <div className="container">
                   <div className="row">
                     <div className="col-sm-6" style={{ maxWidth: 200 }}>
@@ -396,24 +423,37 @@ const Page = ({ session, formFields }) => {
                         rules={[{ required: true, message: "" }]}
                         name="amount"
                       >
-                        <Input placeholder="10" onChange={handleAmountOnchange} />
+                        <Input
+                          placeholder="10"
+                          onChange={handleAmountOnchange}
+                        />
                       </Form.Item>
                     </div>
                     <div className="col-sm-1">
-                      <Form.Item
-                        style={{ maxHeight: "50px" }}
-                        label={" "}
-                      >
+                      <Form.Item style={{ maxHeight: "50px" }} label={" "}>
                         <Button
-                          style={{ background: "#008CBA", maxWidth: "50px", textAlign: "center" }}
+                          style={{
+                            background: "#008CBA",
+                            maxWidth: "50px",
+                            textAlign: "center",
+                          }}
                           onClick={toggleMode}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#FFFFFF" className="bi bi-arrow-right" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="#FFFFFF"
+                            className="bi bi-arrow-right"
+                            viewBox="0 0 16 16"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"
+                            />
                           </svg>
                         </Button>
                       </Form.Item>
-
                     </div>
                     <div className="col-sm-6" style={{ maxWidth: 200 }}>
                       <Form.Item
@@ -434,21 +474,39 @@ const Page = ({ session, formFields }) => {
                     </Form.Item>
                   </div> */}
                     <div className="col-sm-1" style={{ maxWidth: 200 }}>
-                      {isDepositing ? (<div>
-                        <Form.Item label={" "} name="recieve">
-                          {isApprovalNeeded ? (
-                            <Button
-                              style={{ maxHeight: 50 }}
-                              className="custom-btn"
-                              key="submit"
-                              htmlType="submit"
-                              type="primary"
-                              value={""}
-                              loading={loading}
-                            >
-                              {"Approve"}
-                            </Button>
-                          ) : (
+                      {isDepositing ? (
+                        <div>
+                          <Form.Item label={" "} name="recieve">
+                            {isApprovalNeeded ? (
+                              <Button
+                                style={{ maxHeight: 50 }}
+                                className="custom-btn"
+                                key="submit"
+                                htmlType="submit"
+                                type="primary"
+                                value={""}
+                                loading={loading}
+                              >
+                                {"Approve"}
+                              </Button>
+                            ) : (
+                              <Button
+                                style={{}}
+                                className="custom-btn"
+                                key="submit"
+                                htmlType="submit"
+                                type="primary"
+                                value={""}
+                                loading={loading}
+                              >
+                                {"Deposit"}
+                              </Button>
+                            )}
+                          </Form.Item>
+                        </div>
+                      ) : (
+                        <div>
+                          <Form.Item label={" "}>
                             <Button
                               style={{}}
                               className="custom-btn"
@@ -458,32 +516,14 @@ const Page = ({ session, formFields }) => {
                               value={""}
                               loading={loading}
                             >
-                              {"Deposit"}
+                              Withdraw
                             </Button>
-                          )}
-                        </Form.Item>
-                      </div>) : (<div>
-                        <Form.Item
-                          label={" "}
-                        >
-                          <Button
-                            style={{}}
-                            className="custom-btn"
-                            key="submit"
-                            htmlType="submit"
-                            type="primary"
-                            value={""}
-                            loading={loading}
-                          >
-                            Withdraw
-                          </Button>
-                        </Form.Item>
-
-                      </div>)}
+                          </Form.Item>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-
               </Card>
             </Form>
           </div>
@@ -682,7 +722,7 @@ const Page = ({ session, formFields }) => {
     </React.Fragment>
   );
 };
-const Breadcrumb = ({ }) => {
+const Breadcrumb = ({}) => {
   const router = useRouter();
   const { id } = router.query;
   const [rfqData, setRfqData] = useState({});
@@ -716,7 +756,7 @@ const Breadcrumb = ({ }) => {
   );
 };
 
-const panel = ({ }) => {
+const panel = ({}) => {
   return <UserPanel Breadcrumb={Breadcrumb}></UserPanel>;
 };
 Page.Breadcrumb = panel;
