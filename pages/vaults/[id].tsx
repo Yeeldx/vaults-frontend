@@ -104,14 +104,14 @@ const Page = ({ session, formFields }) => {
     const signer = provider.getSigner();
 
     let vaultContract;
-    if(data === undefined){
+    if (data === undefined) {
       console.log("getTokenSummary: ", vault?.address);
       vaultContract = new ethers.Contract(vault?.address, vaultAbi, signer);
-    }else{
+    } else {
       console.log("getTokenSummary: ", data?.address);
       vaultContract = new ethers.Contract(data?.address, vaultAbi, signer);
     }
-    
+
     const accounts = await window.ethereum.request({
       method: "eth_requestAccounts",
     });
@@ -125,7 +125,7 @@ const Page = ({ session, formFields }) => {
     setBalance(parseFloat(ethers.utils.formatUnits(totalBalance)).toFixed(5));
   };
 
-  const changeTab = async (key) => {};
+  const changeTab = async (key) => { };
 
   const toggleMode = async () => {
     const accounts = await window.ethereum.request({
@@ -222,6 +222,11 @@ const Page = ({ session, formFields }) => {
         });
     }
   };
+
+  const handleRedirect = () => {
+    console.log("handleRedirect")
+    window.open(data?.buyToken, '_blank', 'noreferrer');
+  }
 
   const handleAmountOnchange = async (event) => {
     setLoading(true);
@@ -435,6 +440,16 @@ const Page = ({ session, formFields }) => {
                           placeholder="10"
                           onChange={handleAmountOnchange}
                         />
+
+                        <Button
+                          onClick={handleRedirect}
+                          style={{ marginTop: "10px", background: "#757575" }}>
+                          <text style={{ color: "#FFFFFF" }}>Get Token</text>
+                          <svg style={{ marginLeft: "5px" }} width="12" height="12" fill="#FFFFFF" className="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z" />
+                            <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z" />
+                          </svg>
+                        </Button>
                       </Form.Item>
                     </div>
                     <div className="col-sm-1">
@@ -730,7 +745,7 @@ const Page = ({ session, formFields }) => {
     </React.Fragment>
   );
 };
-const Breadcrumb = ({}) => {
+const Breadcrumb = ({ }) => {
   const router = useRouter();
   const { id } = router.query;
   const [rfqData, setRfqData] = useState({});
@@ -764,7 +779,7 @@ const Breadcrumb = ({}) => {
   );
 };
 
-const panel = ({}) => {
+const panel = ({ }) => {
   return <UserPanel Breadcrumb={Breadcrumb}></UserPanel>;
 };
 Page.Breadcrumb = panel;
