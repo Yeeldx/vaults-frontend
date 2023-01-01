@@ -41,7 +41,7 @@
     "gas": 3798
   },
   {
-    "gas": 3923,
+    "gas": 1576655,
     "inputs": [{ "name": "arg0", "type": "address" }],
     "name": "balanceOf",
     "outputs": [{ "name": "", "type": "uint256" }],
@@ -59,6 +59,6 @@
         "type": "uint256"
       }
     ],
-    "gas": 8698
+    "gas": 1576655
   }
 ]

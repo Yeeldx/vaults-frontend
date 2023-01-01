@@ -84,7 +84,7 @@ const Page = ({ session, formFields }) => {
 
         setAccount(accounts[0]);
 
-        getTokenSummary();
+        getTokenSummary(result.data);
 
         form.setFieldsValue({
           from: accounts[0],
@@ -96,25 +96,33 @@ const Page = ({ session, formFields }) => {
       });
   }, [router, id]);
 
-  const [deposited, setDeposited] = useState(0);
-  const [balance, setBalance] = useState(0);
+  const [deposited, setDeposited] = useState("0.00");
+  const [balance, setBalance] = useState("0.00");
 
-  const getTokenSummary = async () => {
+  const getTokenSummary = async (vault) => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
-    const vaultContract = new ethers.Contract(data?.address, vaultAbi, signer);
 
+    let vaultContract;
+    if(data === undefined){
+      console.log("getTokenSummary: ", vault?.address);
+      vaultContract = new ethers.Contract(vault?.address, vaultAbi, signer);
+    }else{
+      console.log("getTokenSummary: ", data?.address);
+      vaultContract = new ethers.Contract(data?.address, vaultAbi, signer);
+    }
+    
     const accounts = await window.ethereum.request({
       method: "eth_requestAccounts",
     });
 
     const totalDeposited = await vaultContract.totalAssets();
     console.log("tt depo", totalDeposited.toString());
-    setDeposited(totalDeposited)
+    setDeposited(parseFloat(ethers.utils.formatUnits(totalDeposited)).toFixed(5))
 
     const totalBalance = await vaultContract.balanceOf(accounts[0]);
     console.log("tt balance", totalBalance.toString());
-    setBalance(totalBalance);
+    setBalance(parseFloat(ethers.utils.formatUnits(totalBalance)).toFixed(5));
   };
 
   const changeTab = async (key) => {};
@@ -270,7 +278,7 @@ const Page = ({ session, formFields }) => {
                 <div className="content-wrapper">
                   <div className="title">Total deposited</div>
                   <div className="number">
-                    {Number(data?.tvl?.tvl_deposited).toFixed(2)}
+                    {deposited}
                   </div>
                   <div className="wrapper">
                     {/* <div className="description">
@@ -278,7 +286,7 @@ const Page = ({ session, formFields }) => {
                     </div> */}
                     <div className="value-wrapper">
                       <span className="label"></span>
-                      <span className="value">{"10,500,298.71"}</span>
+                      <span className="value">{"$ NaN"}</span>
                     </div>
                   </div>
                   {/*
@@ -326,11 +334,11 @@ const Page = ({ session, formFields }) => {
                 </div>
                 <div className="content-wrapper">
                   <div className="title">Balance</div>
-                  <div className="number">{"0.00"}</div>
+                  <div className="number">{balance}</div>
                   <div className="wrapper">
                     <div className="value-wrapper">
                       <span className="label"></span>
-                      <span className="value">{"0.00"}</span>
+                      <span className="value">{"$ NaN"}</span>
                     </div>
                   </div>
                   {/*
