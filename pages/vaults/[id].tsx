@@ -73,7 +73,7 @@ const Page = ({ session, formFields }) => {
     api
       .get("/api/vaults/" + id)
       .then(async ({ data: result }) => {
-        console.log("result.data", result.data);
+        console.log("result", result);
         setData(result.data);
 
         const accounts = await window.ethereum.request({
