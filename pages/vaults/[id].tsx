@@ -442,6 +442,7 @@ const Page = ({ session, formFields }) => {
                         />
 
                         <Button
+                          htmlType="button"
                           onClick={handleRedirect}
                           style={{ marginTop: "10px", background: "#757575" }}>
                           <text style={{ color: "#FFFFFF" }}>Get Token</text>
