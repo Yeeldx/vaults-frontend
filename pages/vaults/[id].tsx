@@ -389,7 +389,7 @@ const Page = ({ session, formFields }) => {
               onFinish={onFinish}
               onFinishFailed={onFinishFailed}
               layout="vertical"
-              size="medium"
+              size="middle"
               form={form}
               scrollToFirstError
               className="common-form card-form"
@@ -441,7 +441,7 @@ const Page = ({ session, formFields }) => {
                           onChange={handleAmountOnchange}
                         />
 
-                        <Button
+                        {/* <Button
                           htmlType="button"
                           onClick={handleRedirect}
                           style={{ marginTop: "10px", background: "#757575" }}>
@@ -450,12 +450,13 @@ const Page = ({ session, formFields }) => {
                             <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z" />
                             <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z" />
                           </svg>
-                        </Button>
+                        </Button> */}
                       </Form.Item>
                     </div>
                     <div className="col-sm-1">
-                      <Form.Item style={{ maxHeight: "50px" }} label={" "}>
+                      <Form.Item style={{ maxHeight: "50px" }} label={" "} name="toggle">
                         <Button
+                          htmlType="button"
                           style={{
                             background: "#008CBA",
                             maxWidth: "50px",
