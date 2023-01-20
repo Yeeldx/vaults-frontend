@@ -100,6 +100,9 @@ const Page = ({ session, formFields }) => {
   const [balance, setBalance] = useState("0.00");
 
   const getTokenSummary = async (vault) => {
+    if(vault?.address === '0x8cbaAC87FDD9Bb6C3FdB5b3C870b2443D0284fa6'){
+      return
+    }
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
 
@@ -153,6 +156,9 @@ const Page = ({ session, formFields }) => {
   const onFinish = async (values) => {
     setLoading(true);
 
+    if(data?.emergency_shutdown){
+      return
+    }
     values._value = ethers.utils.parseUnits(values.amount, "ether").toString();
     values._spender = values.from;
 
