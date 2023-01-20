@@ -4,6 +4,7 @@ import { useListen } from "../../../hooks/useListen";
 import { useMetaMask } from "../../../hooks/useMetaMask";
 import YeeldxIcon from '../../../assets/yeeldxIcon.svg';
 import YeeldxLogo from '../../../assets/yeeldxLogo.svg';
+import WarningIcon from '../../../public/assets/engine-warning.svg'
 
 import {
   NavigationView,
@@ -18,7 +19,7 @@ import { Button } from "antd";
 export default function Header() {
   const {
     dispatch,
-    state: { status, isMetaMaskInstalled, wallet, balance },
+    state: { status, isMetaMaskInstalled, wallet, balance, networkId },
   } = useMetaMask();
 
   console.log(
@@ -37,6 +38,11 @@ export default function Header() {
     status !== "pageNotLoaded" && isMetaMaskInstalled && !wallet;
 
   const isConnected = status !== "pageNotLoaded" && typeof wallet === "string";
+
+  const isWrongNetwork = networkId !== "42161"
+  console.log('networkId !== 42161', networkId !== "42161");
+  console.log('networkId', networkId);
+  console.log('isWrongNetwork', isWrongNetwork);
 
   const handleConnect = async () => {
     dispatch({ type: "loading" });
@@ -73,22 +79,31 @@ export default function Header() {
             alt='YeeldxLogo'
             height={60}
           />
-          <span style={{fontWeight: 500, color: "#ffffff"}}>Yeeldx</span>
+          <span style={{ fontWeight: 500, color: "#ffffff" }}>Yeeldx</span>
         </Link>
         <ul className="menu-list">
           <li>Vaults</li>
         </ul>
         <div className="connec_nav_suportLg" >
+          {isWrongNetwork && (
+            <span>
+              <svg style={{ color: "#C30000", marginRight: "5px" }} width="15" height="15" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 7L12 13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/> <path d="M12 17.01L12.01 16.9989" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/> <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/> </svg>
+              <span style={{ color: "#C30000" }}>
+                Connected to a wrong network!
+              </span>
+            </span>
+
+          )}
           {showConnectButton && (
             <li textSize={10} onClick={handleConnect}>
-              <Button className="disconnect" style={{ marginRight: 15}}>
+              <Button className="disconnect" style={{ marginRight: 15 }}>
                 {status === "loading" ? "loading..." : "Connect Wallet"}
               </Button>
             </li>
           )}
 
           {showInstallMetaMask && (
-            <Link href="https://metamask.io/" target="_blank" style={{ marginRight: 15}}>
+            <Link href="https://metamask.io/" target="_blank" style={{ marginRight: 15 }}>
               Install MetaMask
             </Link>
           )}
@@ -100,7 +115,7 @@ export default function Header() {
                   className="disconnect"
                   textSize={10}
                   onClick={handleDisconnect}
-                  style={{ marginRight: 15}}
+                  style={{ marginRight: 15 }}
                 >
                   Disconnect
                 </Button>

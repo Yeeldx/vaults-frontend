@@ -17,6 +17,7 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
         ethereumProviderInjected && Boolean(window.ethereum.isMetaMask);
 
       const local = window.localStorage.getItem("metamaskState");
+      const networkId = window.ethereum.networkVersion;
 
       // user was previously connected, start listening to MM
       if (local) {
@@ -30,7 +31,7 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
           { wallet: null, balance: null };
 
       instantiateSdk();
-      dispatch({ type: "pageLoaded", isMetaMaskInstalled, wallet, balance });
+      dispatch({ type: "pageLoaded", isMetaMaskInstalled, wallet, balance, networkId });
     }
   }, []);
 

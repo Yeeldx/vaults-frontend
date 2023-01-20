@@ -7,16 +7,19 @@ type PageLoadedAction = {
   isMetaMaskInstalled: boolean;
   wallet: string | null;
   balance: string | null;
+  networkId: string;
 };
 type LoadingAction = { type: "loading" };
 type IdleAction = { type: "idle" };
+type WrongNetworkAction = { type: "wrongNetwork", networkId: string }
 
 type Action =
   | ConnectAction
   | DisconnectAction
   | PageLoadedAction
   | LoadingAction
-  | IdleAction;
+  | IdleAction
+  | WrongNetworkAction;
 
 type Dispatch = (action: Action) => void;
 
@@ -27,6 +30,7 @@ type State = {
   isMetaMaskInstalled: boolean;
   status: Status;
   balance: string | null;
+  networkId: any
 };
 
 const initialState: State = {
@@ -34,6 +38,7 @@ const initialState: State = {
   isMetaMaskInstalled: false,
   status: "loading",
   balance: null,
+  networkId: 42161
 } as const;
 
 function metamaskReducer(state: State, action: Action): State {
@@ -54,14 +59,18 @@ function metamaskReducer(state: State, action: Action): State {
       return { ...state, wallet: null, balance: null };
     }
     case "pageLoaded": {
-      const { isMetaMaskInstalled, balance, wallet } = action;
-      return { ...state, isMetaMaskInstalled, status: "idle", wallet, balance };
+      const { isMetaMaskInstalled, balance, wallet, networkId } = action;
+      return { ...state, isMetaMaskInstalled, status: "idle", wallet, balance, networkId };
     }
     case "loading": {
       return { ...state, status: "loading" };
     }
     case "idle": {
       return { ...state, status: "idle" };
+    }
+    case "wrongNetwork": {
+      const { networkId } = action;
+      return { ...state, networkId }
     }
 
     default: {

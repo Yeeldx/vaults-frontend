@@ -22,5 +22,9 @@ export const useListen = () => {
         dispatch({ type: "disconnect" });
       }
     });
+
+    window.ethereum.on("networkChanged", async (networkId) => {
+      dispatch({ type: "wrongNetwork", networkId: networkId });
+    })
   };
 };
