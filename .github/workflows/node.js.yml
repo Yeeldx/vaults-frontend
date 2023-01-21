@@ -26,4 +26,5 @@ jobs:
         cache: 'npm'
     - run: yarn
     - run: yarn build
+    - run: pm2 delete all
     - run: pm2 start yarn --name "nextjs" --interpreter bash -- start
