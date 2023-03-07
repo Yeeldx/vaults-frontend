@@ -83,7 +83,7 @@ const Page = ({ session, formInputs }) => {
     };
     document.body.addEventListener("click", removeCalenderBox);
     return () => document.body.removeEventListener("click", removeCalenderBox);
-  },[]);
+  }, []);
 
   const onSearch = async (
     tab = "all",
@@ -268,7 +268,7 @@ const Page = ({ session, formInputs }) => {
           >
             {durationOptions[selectedDuration]}
           </a>
-          
+
         </div>
 
         <div className="button-wrapper"></div>
@@ -370,7 +370,7 @@ const Page = ({ session, formInputs }) => {
                         <li>
                           <a className="filter filter-button">{"Filter"}</a>
                           <ul className="drop-down-list">
-                            
+
                           </ul>
                         </li>
                       </ul>
@@ -378,7 +378,7 @@ const Page = ({ session, formInputs }) => {
                         <li>
                           <a className="sort filter-button">{"Sort"}</a>
                           <ul className="drop-down-list">
-                            
+
                           </ul>
                         </li>
                       </ul>
@@ -442,12 +442,16 @@ const Page = ({ session, formInputs }) => {
                           </td>
 
                           <td className="promotion no">
-                            <div class="button-wrapper">
-                              <Link href={`/vaults/${token.address}`} className="view">
-                                {"view"}
-                              </Link>
-                              {/*<a className="message">Message</a>*/}
-                            </div>
+                            {token.status === 0 ?
+                              <div>
+                                Coming Soon!
+                              </div> :
+                              <div className="button-wrapper">
+                                <Link href={`/vaults/${token.address}`} className="view">
+                                  {"view"}
+                                </Link>
+                              </div>
+                            }
                           </td>
                         </tr>
                       );
@@ -488,7 +492,7 @@ const Page = ({ session, formInputs }) => {
     </React.Fragment>
   );
 };
-const Breadcrumb = ({}) => {
+const Breadcrumb = ({ }) => {
 
   return (
     <>
@@ -497,7 +501,7 @@ const Breadcrumb = ({}) => {
   );
 };
 
-const panel = ({}) => {
+const panel = ({ }) => {
   return <UserPanel Breadcrumb={Breadcrumb}></UserPanel>;
 };
 Page.Breadcrumb = panel;
@@ -506,7 +510,7 @@ export default Page;
 
 export async function getServerSideProps(context) {
   const { req, query, params, locale } = context;
-  const session =  {}
+  const session = {}
   let formInputs = {};
   try {
   } catch (err) {
