@@ -297,7 +297,7 @@ const Page = ({ session, formFields }) => {
                 <div className="content-wrapper">
                   <div className="title">Net APY</div>
                   <div className="number">
-                    {Number(data?.apy?.net_apy).toFixed(2)}%
+                    58%{/* {Number(data?.apy?.net_apy).toFixed(2)}% */}
                   </div>
                   <div className="wrapper">
                     {/* <div className="description">
