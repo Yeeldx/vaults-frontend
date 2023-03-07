@@ -1,4 +1,11 @@
+import Web3 from "web3";
 import { useMetaMask } from "./useMetaMask";
+
+async function getNetworkId() {
+  const web3 = new Web3(window.ethereum);
+  const id = await web3.eth.net.getId();
+  return id;
+}
 
 export const useListen = () => {
   const { dispatch } = useMetaMask();
@@ -25,6 +32,15 @@ export const useListen = () => {
 
     window.ethereum.on("networkChanged", async (networkId) => {
       dispatch({ type: "wrongNetwork", networkId: networkId });
-    })
+    });
+
+    // Get the initial network ID
+    getNetworkId()
+      .then((id) => {
+        dispatch({ type: "wrongNetwork", networkId: id.toString() });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
 };
