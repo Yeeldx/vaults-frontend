@@ -73,14 +73,11 @@ const Page = ({ session, formFields }) => {
     api
       .get("/api/vaults/" + id)
       .then(async ({ data: result }) => {
-        console.log("result", result);
         setData(result.data);
 
         const accounts = await window.ethereum.request({
           method: "eth_requestAccounts",
         });
-
-        console.log("acc", accounts);
 
         setAccount(accounts[0]);
 
@@ -100,7 +97,7 @@ const Page = ({ session, formFields }) => {
   const [balance, setBalance] = useState("0.00");
 
   const getTokenSummary = async (vault) => {
-    if(vault?.address === '0x8cbaAC87FDD9Bb6C3FdB5b3C870b2443D0284fa6'){
+    if (vault?.address === '0x8cbaAC87FDD9Bb6C3FdB5b3C870b2443D0284fa6') {
       return
     }
     const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -108,10 +105,8 @@ const Page = ({ session, formFields }) => {
 
     let vaultContract;
     if (data === undefined) {
-      console.log("getTokenSummary: ", vault?.address);
       vaultContract = new ethers.Contract(vault?.address, vaultAbi, signer);
     } else {
-      console.log("getTokenSummary: ", data?.address);
       vaultContract = new ethers.Contract(data?.address, vaultAbi, signer);
     }
 
@@ -120,11 +115,9 @@ const Page = ({ session, formFields }) => {
     });
 
     const totalDeposited = await vaultContract.totalAssets();
-    console.log("tt depo", totalDeposited.toString());
     setDeposited(parseFloat(ethers.utils.formatUnits(totalDeposited)).toFixed(5))
 
     const totalBalance = await vaultContract.balanceOf(accounts[0]);
-    console.log("tt balance", totalBalance.toString());
     setBalance(parseFloat(ethers.utils.formatUnits(totalBalance)).toFixed(5));
   };
 
@@ -156,7 +149,7 @@ const Page = ({ session, formFields }) => {
   const onFinish = async (values) => {
     setLoading(true);
 
-    if(data?.emergency_shutdown){
+    if (data?.emergency_shutdown) {
       return
     }
     values._value = ethers.utils.parseUnits(values.amount, "ether").toString();
@@ -182,22 +175,18 @@ const Page = ({ session, formFields }) => {
             gasLimit: 1000000,
           }
         );
-        console.log("approve", approve);
         setIsApprovalNeeded(false);
         setLoading(false);
       } else {
         /** Deposit Transaction */
-        console.log(vaultContract);
         vaultContract
           .deposit(ethers.utils.parseUnits(values.amount), {
             gasLimit: 1000000,
           })
           .then(async (tx: any) => {
-            console.log("Token depositing");
             setLoading(false);
 
             await tx.wait(1);
-            console.log(`Token deposit complete : ${tx}`);
             router.reload();
           })
           .catch((error: any) => {
@@ -213,11 +202,9 @@ const Page = ({ session, formFields }) => {
           gasLimit: 1000000,
         })
         .then(async (tx: any) => {
-          console.log("Token withdrawing");
           setLoading(false);
 
           await tx.wait(1);
-          console.log(`Token withdraw complete : ${tx}`);
           router.reload();
         })
         .catch((error: any) => {
@@ -230,7 +217,6 @@ const Page = ({ session, formFields }) => {
   };
 
   const handleRedirect = () => {
-    console.log("handleRedirect")
     window.open(data?.buyToken, '_blank', 'noreferrer');
   }
 
@@ -254,15 +240,10 @@ const Page = ({ session, formFields }) => {
       method: "eth_requestAccounts",
     });
 
-    console.log("account", accounts[0]);
-    console.log("input amount", event.target.value);
 
     const allowance = await tokenContract.allowance(accounts[0], data?.address);
-    console.log("allowance", allowance.toString());
 
     const inputtedAmount = ethers.utils.parseUnits(event.target.value);
-    console.log("inputtedAmount", inputtedAmount);
-    console.log("inputtedAmount.toString()", inputtedAmount.toString());
 
     if (allowance >= inputtedAmount) {
       setIsApprovalNeeded(false);
@@ -297,7 +278,7 @@ const Page = ({ session, formFields }) => {
                     </div> */}
                     <div className="value-wrapper">
                       <span className="label"></span>
-                      <span className="value">{"$ NaN"}</span>
+                      {/* <span className="value">{"$ NaN"}</span> */}
                     </div>
                   </div>
                   {/*
@@ -349,7 +330,7 @@ const Page = ({ session, formFields }) => {
                   <div className="wrapper">
                     <div className="value-wrapper">
                       <span className="label"></span>
-                      <span className="value">{"$ NaN"}</span>
+                      {/* <span className="value">{"$ NaN"}</span> */}
                     </div>
                   </div>
                   {/*
