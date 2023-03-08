@@ -59,6 +59,7 @@ const Page = ({ session, formFields }) => {
   const [isApprovalNeeded, setIsApprovalNeeded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isDepositing, setIsDepositing] = useState(true);
+  const [vaultContract, setVaultContract] = useState();
 
   const {
     state: { wallet },
@@ -66,6 +67,9 @@ const Page = ({ session, formFields }) => {
 
   const [provider, setProvider] = useState({});
   const [account, setAccount] = useState("");
+
+  const [deposited, setDeposited] = useState("0.00");
+  const [balance, setBalance] = useState("0.00");
 
   useEffect(() => {
     setProvider(new ethers.providers.Web3Provider(window.ethereum));
@@ -81,7 +85,7 @@ const Page = ({ session, formFields }) => {
 
         setAccount(accounts[0]);
 
-        getTokenSummary(result.data);
+        setVaultInstance(result.data);
 
         form.setFieldsValue({
           from: accounts[0],
@@ -93,10 +97,7 @@ const Page = ({ session, formFields }) => {
       });
   }, [router, id]);
 
-  const [deposited, setDeposited] = useState("0.00");
-  const [balance, setBalance] = useState("0.00");
-
-  const getTokenSummary = async (vault) => {
+  function setVaultInstance(vault){
     if (vault?.address === '0x8cbaAC87FDD9Bb6C3FdB5b3C870b2443D0284fa6') {
       return
     }
@@ -110,16 +111,26 @@ const Page = ({ session, formFields }) => {
       vaultContract = new ethers.Contract(data?.address, vaultAbi, signer);
     }
 
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
+    setVaultContract(vaultContract);
 
+  }
+
+  const getTokenSummary = async () => {
+    
+    if(vaultContract === undefined){
+      return;
+    }
     const totalDeposited = await vaultContract.totalAssets();
+    console.log("totalAssets: ", totalDeposited)
     setDeposited(parseFloat(ethers.utils.formatUnits(totalDeposited)).toFixed(5))
 
-    const totalBalance = await vaultContract.balanceOf(accounts[0]);
+    const totalBalance = await vaultContract.balanceOf(account);
     setBalance(parseFloat(ethers.utils.formatUnits(totalBalance)).toFixed(5));
   };
+
+  useEffect(()=>{
+    getTokenSummary();
+  }, [vaultContract])
 
   const changeTab = async (key) => { };
 

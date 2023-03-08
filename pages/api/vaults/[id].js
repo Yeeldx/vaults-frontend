@@ -2,7 +2,6 @@ export default function handler(req, res) {
   return new Promise((resolve, reject) => {
     fetch("https://yeeldx.github.io/data/vaults.json")
     .then((response) => {
-      console.log("response : ", response);
       return response.json();
     })
     .then((result) => {
