@@ -31,6 +31,7 @@ import {
   EditTwoTone,
   CheckCircleTwoTone,
 } from "@ant-design/icons";
+import type { TabsProps } from 'antd';
 import { api } from "../../libraries/api";
 import moment from "moment";
 import Link from "next/link";
@@ -97,7 +98,201 @@ const Page = ({ session, formFields }) => {
       });
   }, [router, id]);
 
-  function setVaultInstance(vault){
+
+  const handleAmountOnchange = async (event) => {
+    setLoading(true);
+    //add allowance check here
+    // if allowance needed call setIsApprovalNeeded(true) else setIsApprovalNeeded(false)
+
+    /**
+     * TODO see if tokenContract can be made global to avoid code duplication. refer onFinish method.
+     * */
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const tokenContract = new ethers.Contract(
+      data?.token.address,
+      erc20Abi,
+      signer
+    );
+
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+
+
+    const allowance = await tokenContract.allowance(accounts[0], data?.address);
+
+    const inputtedAmount = ethers.utils.parseUnits(event.target.value);
+
+    if (allowance >= inputtedAmount) {
+      setIsApprovalNeeded(false);
+    } else {
+      setIsApprovalNeeded(true);
+    }
+    setLoading(false);
+  };
+
+  const toggleMode = async (key: String) => {
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    switch (key) {
+      case '1':
+        setIsDepositing(true);
+        form.setFieldsValue({
+          from: accounts[0],
+          to: data?.address,
+        });
+        break;
+      case '2':
+        setIsDepositing(false);
+        form.setFieldsValue({
+          from: data?.address,
+          to: accounts[0],
+        });
+        break;
+    }
+  };
+
+  const toggleTxType = (key: String) => {
+    toggleMode(key);
+  }
+
+  const renderVaultTabChild = (key: String) => {
+    return (
+      <>
+        <Card>
+          <div className="container">
+            <div className="row">
+              <div className="col-sm-6" style={{ maxWidth: 200 }}>
+                <Form.Item hidden name="rfq">
+                  <Input type="hidden" />
+                </Form.Item>
+                <Form.Item
+                  label={"From"}
+                  rules={[{ required: true, message: "" }]}
+                  name="from"
+                >
+                  <Input placeholder="SL-0001" />
+                </Form.Item>
+              </div>
+              <div className="col-sm-6" style={{ maxWidth: 200 }}>
+                <Form.Item
+                  label={"Amount"}
+                  rules={[{ required: true, message: "" }]}
+                  name="amount"
+                >
+                  <Input
+                    placeholder="10"
+                    onChange={handleAmountOnchange}
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-sm-1">
+                <Form.Item style={{ maxHeight: "50px", marginLeft: "15px" }} label={" "} name="toggle">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    className="bi bi-arrow-right"
+                    viewBox="0 0 16 16"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"
+                    />
+                  </svg>
+                </Form.Item>
+              </div>
+              <div className="col-sm-6" style={{ maxWidth: 200 }}>
+                <Form.Item
+                  label={"To"}
+                  rules={[{ required: true, message: "" }]}
+                  name="to"
+                >
+                  <Input placeholder={"SL-0001"} />
+                </Form.Item>
+              </div>
+              {/* <div className="col-sm-6">
+                    <Form.Item
+                      label={"You Will Recieve"}
+                      rules={[{ required: true, message: "" }]}
+                      name="recieve"
+                    >
+                      <Input placeholder="10" />
+                    </Form.Item>
+                  </div> */}
+              <div className="col-sm-1" style={{ maxWidth: 200 }}>
+                {isDepositing ? (
+                  <div>
+                    <Form.Item label={" "} name="recieve">
+                      {isApprovalNeeded ? (
+                        <Button
+                          style={{ maxHeight: 50 }}
+                          className="custom-btn"
+                          key="submit"
+                          htmlType="submit"
+                          type="primary"
+                          value={""}
+                          loading={loading}
+                        >
+                          {"Approve"}
+                        </Button>
+                      ) : (
+                        <Button
+                          style={{}}
+                          className="custom-btn"
+                          key="submit"
+                          htmlType="submit"
+                          type="primary"
+                          value={""}
+                          loading={loading}
+                        >
+                          {"Deposit"}
+                        </Button>
+                      )}
+                    </Form.Item>
+                  </div>
+                ) : (
+                  <div>
+                    <Form.Item label={" "}>
+                      <Button
+                        style={{}}
+                        className="custom-btn"
+                        key="submit"
+                        htmlType="submit"
+                        type="primary"
+                        value={""}
+                        loading={loading}
+                      >
+                        Withdraw
+                      </Button>
+                    </Form.Item>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+      </>
+    )
+  }
+
+  const vaultTabItems: TabsProps['items'] = [
+    {
+      key: '1',
+      label: `Deposit`,
+      children: renderVaultTabChild('1'),
+    },
+    {
+      key: '2',
+      label: `Withdraw`,
+      children: renderVaultTabChild('2'),
+    }
+  ];
+
+
+  function setVaultInstance(vault) {
     if (vault?.address === '0x8cbaAC87FDD9Bb6C3FdB5b3C870b2443D0284fa6') {
       return
     }
@@ -116,8 +311,8 @@ const Page = ({ session, formFields }) => {
   }
 
   const getTokenSummary = async () => {
-    
-    if(vaultContract === undefined){
+
+    if (vaultContract === undefined) {
       return;
     }
     const totalDeposited = await vaultContract.totalAssets();
@@ -128,30 +323,11 @@ const Page = ({ session, formFields }) => {
     setBalance(parseFloat(ethers.utils.formatUnits(totalBalance)).toFixed(5));
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     getTokenSummary();
   }, [vaultContract])
 
   const changeTab = async (key) => { };
-
-  const toggleMode = async () => {
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
-    if (isDepositing) {
-      setIsDepositing(false);
-      form.setFieldsValue({
-        from: data?.address,
-        to: accounts[0],
-      });
-    } else {
-      setIsDepositing(true);
-      form.setFieldsValue({
-        from: accounts[0],
-        to: data?.address,
-      });
-    }
-  };
 
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
@@ -230,39 +406,6 @@ const Page = ({ session, formFields }) => {
   const handleRedirect = () => {
     window.open(data?.buyToken, '_blank', 'noreferrer');
   }
-
-  const handleAmountOnchange = async (event) => {
-    setLoading(true);
-    //add allowance check here
-    // if allowance needed call setIsApprovalNeeded(true) else setIsApprovalNeeded(false)
-
-    /**
-     * TODO see if tokenContract can be made global to avoid code duplication. refer onFinish method.
-     * */
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-    const tokenContract = new ethers.Contract(
-      data?.token.address,
-      erc20Abi,
-      signer
-    );
-
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
-
-
-    const allowance = await tokenContract.allowance(accounts[0], data?.address);
-
-    const inputtedAmount = ethers.utils.parseUnits(event.target.value);
-
-    if (allowance >= inputtedAmount) {
-      setIsApprovalNeeded(false);
-    } else {
-      setIsApprovalNeeded(true);
-    }
-    setLoading(false);
-  };
 
   return (
     <React.Fragment>
@@ -393,161 +536,10 @@ const Page = ({ session, formFields }) => {
               className="common-form card-form"
               requiredMark={false}
             >
-              <Card
-                title={"Deposit"}
-                actions={
-                  [
-                    // <div className="row col-xl-12" style={{ float: "left" }}>
-                    //   <Button
-                    //     style={{ float: "left", marginRight: 10 }}
-                    //     className="form-save"
-                    //     key="submit"
-                    //     htmlType="submit"
-                    //     type="primary"
-                    //   >
-                    //     {t("submitQuotation")}
-                    //   </Button>
-                    //   <Button className="form-cancel" key="back" htmlType="reset">
-                    //     {t("reset")}
-                    //   </Button>
-                    // </div>,
-                  ]
-                }
-              >
-                <div className="container">
-                  <div className="row">
-                    <div className="col-sm-6" style={{ maxWidth: 200 }}>
-                      <Form.Item hidden name="rfq">
-                        <Input type="hidden" />
-                      </Form.Item>
-                      <Form.Item
-                        label={"From"}
-                        rules={[{ required: true, message: "" }]}
-                        name="from"
-                      >
-                        <Input placeholder="SL-0001" />
-                      </Form.Item>
-                    </div>
-                    <div className="col-sm-6" style={{ maxWidth: 200 }}>
-                      <Form.Item
-                        label={"Amount"}
-                        rules={[{ required: true, message: "" }]}
-                        name="amount"
-                      >
-                        <Input
-                          placeholder="10"
-                          onChange={handleAmountOnchange}
-                        />
-
-                        {/* <Button
-                          htmlType="button"
-                          onClick={handleRedirect}
-                          style={{ marginTop: "10px", background: "#757575" }}>
-                          <text style={{ color: "#FFFFFF" }}>Get Token</text>
-                          <svg style={{ marginLeft: "5px" }} width="12" height="12" fill="#FFFFFF" className="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z" />
-                            <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z" />
-                          </svg>
-                        </Button> */}
-                      </Form.Item>
-                    </div>
-                    <div className="col-sm-1">
-                      <Form.Item style={{ maxHeight: "50px" }} label={" "} name="toggle">
-                        <Button
-                          htmlType="button"
-                          style={{
-                            background: "#008CBA",
-                            maxWidth: "50px",
-                            textAlign: "center",
-                          }}
-                          onClick={toggleMode}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            fill="#FFFFFF"
-                            className="bi bi-arrow-right"
-                            viewBox="0 0 16 16"
-                          >
-                            <path
-                              fill-rule="evenodd"
-                              d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"
-                            />
-                          </svg>
-                        </Button>
-                      </Form.Item>
-                    </div>
-                    <div className="col-sm-6" style={{ maxWidth: 200 }}>
-                      <Form.Item
-                        label={"To"}
-                        rules={[{ required: true, message: "" }]}
-                        name="to"
-                      >
-                        <Input placeholder={"SL-0001"} />
-                      </Form.Item>
-                    </div>
-                    {/* <div className="col-sm-6">
-                    <Form.Item
-                      label={"You Will Recieve"}
-                      rules={[{ required: true, message: "" }]}
-                      name="recieve"
-                    >
-                      <Input placeholder="10" />
-                    </Form.Item>
-                  </div> */}
-                    <div className="col-sm-1" style={{ maxWidth: 200 }}>
-                      {isDepositing ? (
-                        <div>
-                          <Form.Item label={" "} name="recieve">
-                            {isApprovalNeeded ? (
-                              <Button
-                                style={{ maxHeight: 50 }}
-                                className="custom-btn"
-                                key="submit"
-                                htmlType="submit"
-                                type="primary"
-                                value={""}
-                                loading={loading}
-                              >
-                                {"Approve"}
-                              </Button>
-                            ) : (
-                              <Button
-                                style={{}}
-                                className="custom-btn"
-                                key="submit"
-                                htmlType="submit"
-                                type="primary"
-                                value={""}
-                                loading={loading}
-                              >
-                                {"Deposit"}
-                              </Button>
-                            )}
-                          </Form.Item>
-                        </div>
-                      ) : (
-                        <div>
-                          <Form.Item label={" "}>
-                            <Button
-                              style={{}}
-                              className="custom-btn"
-                              key="submit"
-                              htmlType="submit"
-                              type="primary"
-                              value={""}
-                              loading={loading}
-                            >
-                              Withdraw
-                            </Button>
-                          </Form.Item>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Card>
+              <Tabs
+                defaultActiveKey="1"
+                items={vaultTabItems}
+                onChange={toggleTxType} />
             </Form>
           </div>
         </div>
